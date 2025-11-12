@@ -68,41 +68,7 @@ The computationally expensive part(parameter optimization) is performed classica
     Here $J_{ij}$ and $h_i$ are determined by the elements of $Q$.
 **3. Ground state $\rightarrow$ optimal solution**
     The bitstring that minimizes $C(x)$ corresponds to ground state of $H_C$. Thus, finding the optimal solution becomes equivalent to finding the ground state energy of the system.
-    ┌──────────────────────────────────────────────────────────────┐
-│ 1. Problem Encoding                                          │
-│    • Define cost function C(x)                               │
-│    • Convert to QUBO and derive Ising Hamiltonian H_C         │
-└──────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 2. Circuit Construction                                      │
-│    • Prepare initial state |s⟩ = uniform superposition       │
-│    • Build p alternating layers of U_C(γ) and U_M(β)         │
-└──────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 3. Quantum Execution                                         │
-│    • Execute the circuit on a simulator or hardware device   │
-│    • Measure expectation value ⟨H_C⟩                         │
-└──────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 4. Classical Optimization Loop                               │
-│    • Update parameters (γ, β) using a classical optimizer    │
-│    • Rebuild and re-run the quantum circuit                  │
-│    • Repeat until the energy expectation ⟨H_C⟩ converges     │
-└──────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 5. Final Measurement and Decoding                            │
-│    • Sample the final quantum state many times               │
-│    • Identify bitstring(s) with minimum measured energy      │
-│    • Decode result into classical solution (e.g., partition) │
-└──────────────────────────────────────────────────────────────┘
+   
 
 ### Variational Ansatz
 
@@ -133,18 +99,14 @@ Use a classical optimizer (COBYLA, etc.) to adjust the parameters $(\gamma,\beta
 **5.)** Convergence and measurement:
 Once convergence is reached, measure the final state multiple times to abtain bitstrings. The bitstring corresponding to the lowest energy is the approximate solution to the original optimization problem.
 
- Classical Computer                     Quantum Processor
- ─────────────────────────────────────────────────────────────
-  Define $H_C, H_M$                     Prepare $|s\rangle$ (Hadamards)
-         │                                    │
-         ▼                                    ▼
-  Choose $(γ, β)$ parameters     ───►  Apply $U_C(γ), U_M(β)$
-         │                                    │
-         │                       ◄───  Measure $⟨H_C⟩$
-         ▼
-  Update parameters via optimizer
-         │
-         └─── Repeat until convergence ───────►
+| **Classical Computer** | **Quantum Processor** |
+|-------------------------|-----------------------|
+| Define H<sub>C</sub> and H<sub>M</sub> | Prepare initial state \|s⟩ = H<sup>⊗n</sup>\|0⟩ |
+| Choose parameters (γ, β) | Apply cost and mixer unitaries U<sub>C</sub>(γ), U<sub>M</sub>(β) |
+| ⬇ | Measure expectation value ⟨H<sub>C</sub>⟩ |
+| Update parameters via classical optimizer | — |
+| Repeat until convergence | — |
+
 
 ### The QAOA Quantum Circuit
 
@@ -155,7 +117,7 @@ All qubits start in the $|0\rangle$ state, then Hadamard gates prepare a uniform
 
 **2. Cost Hamiltonian layer:**
 Applies a phase based on the cost function:
-$$U_C(\gamma)=e^{-i\gamma H_C}$$
+$U_C(\gamma)=e^{-i\gamma H_C}$
 For a two-qubit term $J_{ij}Z_iZ_j$ , this is implemented as
 
 $$CNOT(i,j)\rightarrow RZ(2\gamma J_{ij}) \rightarrow CNOT(i,j)$$
@@ -170,43 +132,41 @@ The qubits are measured in the computational basis. The most frequently observed
 
 ### Detailed Workflow
 
-
-         
          
 ┌──────────────────────────────────────────────────────────────┐
-│ 1. Problem Encoding                                          │
-│    • Define cost function C(x)                               │
-│    • Convert to QUBO and derive Ising Hamiltonian H_C         │
+│ 1. Problem Encoding│
+│    • Define cost function C(x)│
+│    • Convert to QUBO and derive Ising Hamiltonian H_C│
 └──────────────────────────────────────────────────────────────┘
                     │
                     ▼
 ┌──────────────────────────────────────────────────────────────┐
-│ 2. Circuit Construction                                      │
-│    • Prepare initial state |s⟩ = uniform superposition       │
-│    • Build p alternating layers of U_C(γ) and U_M(β)         │
+│ 2. Circuit Construction│
+│    • Prepare initial state |s⟩ = uniform superposition│
+│    • Build p alternating layers of U_C(γ) and U_M(β)│
 └──────────────────────────────────────────────────────────────┘
                     │
                     ▼
 ┌──────────────────────────────────────────────────────────────┐
-│ 3. Quantum Execution                                         │
-│    • Execute the circuit on a simulator or hardware device   │
-│    • Measure expectation value ⟨H_C⟩                         │
+│ 3. Quantum Execution│
+│    • Execute the circuit on a simulator or hardware device│
+│    • Measure expectation value ⟨H_C⟩│
 └──────────────────────────────────────────────────────────────┘
                     │
                     ▼
 ┌──────────────────────────────────────────────────────────────┐
-│ 4. Classical Optimization Loop                               │
-│    • Update parameters (γ, β) using a classical optimizer    │
-│    • Rebuild and re-run the quantum circuit                  │
-│    • Repeat until the energy expectation ⟨H_C⟩ converges     │
+│ 4. Classical Optimization Loop│
+│    • Update parameters (γ, β) using a classical optimizer│
+│    • Rebuild and re-run the quantum circuit│
+│    • Repeat until the energy expectation ⟨H_C⟩ converges│
 └──────────────────────────────────────────────────────────────┘
                     │
                     ▼
 ┌──────────────────────────────────────────────────────────────┐
-│ 5. Final Measurement and Decoding                            │
-│    • Sample the final quantum state many times               │
-│    • Identify bitstring(s) with minimum measured energy      │
-│    • Decode result into classical solution (e.g., partition) │
+│ 5. Final Measurement and Decoding│
+│    • Sample the final quantum state many times│
+│    • Identify bitstring(s) with minimum measured energy│
+│    • Decode result into classical solution (e.g., partition)│
 └──────────────────────────────────────────────────────────────┘
 
 
