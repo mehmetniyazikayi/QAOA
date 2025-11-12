@@ -65,7 +65,9 @@ The computationally expensive part(parameter optimization) is performed classica
     Binary variables $x_i ∈\{0,1\}$ are replaced by spin variables ${\sigma}_i^z ∈\{-1,+1\}$:
     $x_i= \frac{1-{\sigma}_i^z}{2}$
     Substituting this relation transforms the cost function into an **Ising Hamiltonian**:
+  
     $H_C = \sum_{i<j}J_{ij}{\sigma}_i^z{\sigma}_j^z +\sum_{i}h_i{\sigma}_i^z$
+  
     Here $J_{ij}$ and $h_i$ are determined by the elements of $Q$.
     
 * **3. Ground state $\rightarrow$ optimal solution**
@@ -85,7 +87,7 @@ where;
 *    $H_M=\sum_{i}X_i$ (where $X_i$ are Pauli-X operators) serves as a mixing Hamiltonian that flips qubits.
 
 The expectation value of $H_C$ under this state,
-    $$F_p(\gamma,\beta)=\langle{\Psi(\gamma,\beta)}|H_C|{\Psi(\gamma,\beta)}\rangle$$
+    $F_p(\gamma,\beta)=\langle{\Psi(\gamma,\beta)}|H_C|{\Psi(\gamma,\beta)}\rangle$
 is minimized with respect to $\gamma$ and $\beta$ by a classical optimizer.
 
 ## The Algorithm 
@@ -117,7 +119,7 @@ Applies a phase based on the cost function:
 $U_C(\gamma)=e^{-i\gamma H_C}$
 For a two-qubit term $J_{ij}Z_iZ_j$ , this is implemented as
 
-$$CNOT(i,j)\rightarrow RZ(2\gamma J_{ij}) \rightarrow CNOT(i,j)$$
+$CNOT(i,j)\rightarrow RZ(2\gamma J_{ij}) \rightarrow CNOT(i,j)$
 Single-qubit bias terms $h_iZ_i$ become $RZ(2\gamma h_i)$ rotations.
 
 **3. Mixer Hamiltonian layer:**
