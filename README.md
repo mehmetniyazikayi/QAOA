@@ -57,11 +57,11 @@ The computationally expensive part(parameter optimization) is performed classica
 
 ### From Classical Optimization to Quantum Hamiltonian
 
-* **1. Start from the QUBO form**
+* **1. Start from the QUBO form:**
     Any combinatorial optimization problem can be written as a Quadratic Unconstrained Binary Optimization (QUBO) problem:
         $\min_{x∈\{0,1\}^n} C(x)=x^TQx$
         
-* **2. Map binary variables to spins**
+* **2. Map binary variables to spins:**
     Binary variables $x_i ∈\{0,1\}$ are replaced by spin variables ${\sigma}_i^z ∈\{-1,+1\}$:
     $x_i= \frac{1-{\sigma}_i^z}{2}$
     Substituting this relation transforms the cost function into an **Ising Hamiltonian**:
@@ -70,7 +70,7 @@ The computationally expensive part(parameter optimization) is performed classica
   
     Here $J_{ij}$ and $h_i$ are determined by the elements of $Q$.
     
-* **3. Ground state $\rightarrow$ optimal solution**
+* **3. Ground state $\rightarrow$ optimal solution:**
     The bitstring that minimizes $C(x)$ corresponds to ground state of $H_C$. Thus, finding the optimal solution becomes equivalent to finding the ground state energy of the system.
    
 
@@ -92,15 +92,15 @@ is minimized with respect to $\gamma$ and $\beta$ by a classical optimizer.
 
 ## The Algorithm 
 
-**1.)** Problem encoding:
+* **1.)** Problem encoding:
 Convert the classical optimization task into a QUBO or Ising model, obtaining the cost Hamiltonian $H_C$.
-**2.)** Build the ansatz(parametrized quantum circuit):
+* **2.)** Build the ansatz(parametrized quantum circuit):
 Construct the alternating  sequence of unitaries $e^{-i\gamma_lH_C}$ and $e^{-i\beta_lH_M}$, applied to the initial state $|s\rangle$.
-**3.)** Execute circuit and measure:
+* **3.)** Execute circuit and measure:
 Run the quantum circuit on a simulator or device to estimate the expectation value ($H_C$).
-**4.)** Classical optimization:
+* **4.)** Classical optimization:
 Use a classical optimizer (COBYLA, etc.) to adjust the parameters $(\gamma,\beta)$ to minimize $H_C$.
-**5.)** Convergence and measurement:
+* **5.)** Convergence and measurement:
 Once convergence is reached, measure the final state multiple times to abtain bitstrings. The bitstring corresponding to the lowest energy is the approximate solution to the original optimization problem.
 
  Hybrid Quantum–Classical Optimization Loop
