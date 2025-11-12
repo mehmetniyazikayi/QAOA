@@ -125,9 +125,7 @@ flowchart TD
     B3 --> A3
     A3 --> A4
     A4 --> A2
-``
-
-
+```
 
 
 ### The QAOA Quantum Circuit
