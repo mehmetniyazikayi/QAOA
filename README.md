@@ -64,7 +64,7 @@ The computationally expensive part(parameter optimization) is performed classica
 * **2. Map binary variables to spins:**
     Binary variables $x_i ∈\{0,1\}$ are replaced by spin variables ${\sigma}_i^z ∈\{-1,+1\}$:
     $x_i= \frac{1-{\sigma}_i^z}{2}$
-    Substituting this relation transforms the cost function into an Ising Hamiltonian: $H_C = \sum_{i<j}J_{ij}{\sigma}_i^z{\sigma}_j^z +\sum_{i}h_i{\sigma}_i^z$
+    Substituting this relation transforms the cost function into an Ising Hamiltonian: $H_C = \sum_{i<j}J_{ij} {\sigma}_i^z{\sigma}_j^z + \sum_{i}h_i{\sigma}_i^z$
     Here $J_{ij}$ and $h_i$ are determined by the elements of $Q$.
     
 * **3. Ground state $\rightarrow$ optimal solution:**
