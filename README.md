@@ -103,29 +103,6 @@ Once convergence is reached, measure the final state multiple times to abtain bi
 
  Hybrid Quantum–Classical Optimization Loop
 
-```mermaid
-flowchart TD
-    subgraph Classical_Computer["Classical Computer "]
-        A1[Define H_C and H_M]
-        A2[Choose (γ, β) parameters]
-        A3[Update parameters via optimizer]
-        A4[Repeat until convergence]
-    end
-
-    subgraph Quantum_Processor["Quantum Processor "]
-        B1[Prepare |s⟩ (Hadamards)]
-        B2[Apply U_C(γ), U_M(β)]
-        B3[Measure ⟨H_C⟩]
-    end
-
-    %% Flow between classical and quantum sides
-    A1 --> B1
-    A2 --> B2
-    B2 --> B3
-    B3 --> A3
-    A3 --> A4
-    A4 --> A2
-```
 
 
 ### The QAOA Quantum Circuit
