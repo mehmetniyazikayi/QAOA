@@ -1,143 +1,169 @@
-# The **Quantum Approximate Optimization Algorithm (QAOA)** 
+# Quantum Approximate Optimization Algorithm (QAOA)
 
 ## General Description
 
-The Quantum Approximate Optimization Algorithm (QAOA) is a hybrid quantum–classical variational algorithm designed to solve combinatorial optimization problems that can be written as Quadratic Unconstrained Binary Optimization (QUBO) models.The core idea of the **QAOA** is to encode the objective function of a classical problem into a quantum mechanical energy landscape and to search for its ground state that the configuration of minimal energy, corresponding to the optimal or near-optimal solution. Problems where the goal is to find a configuration of binary variables that minimizes a given cost function, such as in Max-Cut, Traveling Salesman or Job Shop Scheduling.
+The Quantum Approximate Optimization Algorithm (QAOA) is a hybrid quantum–classical variational algorithm designed to solve combinatorial optimization problems that can be written as Quadratic Unconstrained Binary Optimization (QUBO) models.
 
+The core idea of QAOA is to encode the objective function of a classical problem into a quantum mechanical energy landscape and to search for its ground state — the configuration of minimal energy, corresponding to the optimal or near-optimal solution.
 
+These problems aim to find a binary configuration x = (x₁, x₂, …, xₙ) that minimizes a given cost function:
 
-**QAOA** searches for the ground state of $H_C$ using the variational quantum circuits that alternate between two Hamiltonians: a **cost Hamiltonian** $H_C$ (encoding the objective) and a **mixer Hamiltonian** $H_M$ (promoting exploration). The main goal is to find a binary string $x = (x_1, x_2, ... , x_n)$ that minimizes a given cost function:
-            $C(x)= \sum_{i,j}Q_{ij}x_ix_j+\sum_{i}q_ix_i$
+C(x) = Σ<sub>i,j</sub> Q<sub>ij</sub> x<sub>i</sub> x<sub>j</sub> + Σ<sub>i</sub> q<sub>i</sub> x<sub>i</sub>
 
-Formally, these problems can be expressed as a **Quandratic Unconstrained Binary Optimization (QUBO)**:
-              $C(x)=x^TQx$     ,     $x_i$ $∈$ $\{0,1\}$
-              
-which can be mapped to a  quantum Hamiltonian $H_C$ whose ground state encodes the optimal solution. These kind of problems, typically NP-hard, appear in many areas, from graph partioning and scheduling to routing and resource allocation.
+Formally, this can be expressed as:
 
-The algorithm alternates between two unitary transformations:
+C(x) = xᵀQx ,  x<sub>i</sub> ∈ {0,1}
 
-1. The **cost Hamiltonian** $H_C$, which encodes the problem objective
-2. The **mixer Hamiltonian** $H_M$,  whcih drives transitions between different configurations(bitstrings).
+which can be mapped to a quantum Hamiltonian H<sub>C</sub> whose ground state encodes the optimal solution.
 
-By applying these operations repeatedly in a parametrized circuit and optimizing those parameters with a classcial optimizer, QAOA gradually biases the quantum state toward the optimal or near-optimal solution.
+QAOA searches for this ground state using a parameterized quantum circuit that alternates between two Hamiltonians:
 
-The **QAOA** combines the strengths of both paradigms:
-*    **Quantum mechanics** provides a large Hilbert space in which all possible solutions can coexist as a superposition and evolve under interference.
-*    **Classical optimization** guides the search by updating the parameters of the quantum circuit to iteratively minimize the expected energy.
+1. The cost Hamiltonian H<sub>C</sub> — encodes the problem objective  
+2. The mixer Hamiltonian H<sub>M</sub> — promotes exploration between bitstrings
 
-The **QAOA** belongs to family of **Variational Quantum Algorithms (VQAs)**, which are particularly suited for today's noisy intermediate-scale quantum (NISQ) devices because they rely on shallow, parameterized circuits and can tolerate limited coherence times.
+By applying these unitaries repeatedly and optimizing their parameters with a classical optimizer, QAOA biases the quantum state toward the optimal or near-optimal solution.
 
-### Why QAOA ?
+QAOA combines the strengths of both paradigms:
 
-Classical algorithms for hard combinatorial problems, such as simulated annealing, tabu search or genetic algorithms, explore the solution space sequentially or heuristically. For large-scale problems, like the Job Shop Scheduling Problem (JSSP), the number of feasible schedules grows exponentially with the number of jobs and machines. Even state of the art classical heuristics struggle to find optimal or near-optimal solutions as instance sizes increase.
+- Quantum mechanics provides a large Hilbert space in which all possible solutions coexist in superposition and evolve under interference.
+- Classical optimization guides the search by iteratively updating parameters to minimize the measured energy.
+- Variational design (VQA) makes QAOA practical for today’s noisy intermediate-scale quantum (NISQ) devices by requiring only shallow, parameterized circuits.
 
-The **QAOA** is motivated by several key advantages:
+---
 
-**1. Quantum Parallelism**
+## Why QAOA
 
-The quantum state encodes all possible solutions simultaneously, allowing the algorithm to explore a vast search space in one coherent state evolution.
+Classical algorithms for NP-hard problems (e.g., simulated annealing, tabu search, genetic algorithms) explore the search space sequentially or heuristically. For large-scale problems, the number of feasible configurations grows exponentially, and even advanced heuristics struggle to find optimal or near-optimal solutions.
 
-**2. Constructive Interference**
+QAOA provides several major advantages:
 
-Through the choice of parameters, amplitudes associated with good solutions interfere constructively, while those of poor solutions interfere destructively. This effect concentrates measurement probabilities around low-energy(good) states
+1. **Quantum Parallelism**  
+   The quantum state encodes all possible solutions simultaneously, exploring an exponentially large space in one coherent evolution.
 
-**3. Adaptability**
+2. **Constructive Interference**  
+   Proper parameter choices cause good solutions to interfere constructively while suppressing poor ones, concentrating probability near low-energy states.
 
-QAOA is problem-agnostic. Any optimization problem that can be expressed as a QUBO or and Ising Hamiltonian can be embedded into it by defining a suitable cost Hamiltonian.
+3. **Adaptability**  
+   Any optimization problem expressible as a QUBO or an Ising Hamiltonian can be embedded into QAOA by defining a suitable cost Hamiltonian.
 
-**4. Near-term  Feasibility**
+4. **Near-term Feasibility**  
+   QAOA circuits are relatively shallow (often depth p = 1–3), which makes them executable on current NISQ hardware.
 
-Most of the QAOA circuits are relatively shallow (often with depth p=1-3), they can run in current NISQ hardware, making them one of the few practically executable quantum algorithms available nowadays.
+5. **Hybrid Optimization Loop**  
+   The computationally expensive parameter optimization runs classically, while the quantum processor is used only for evaluating expectation values ⟨H<sub>C</sub>⟩.
 
-**5. Hybrid Optimization Loop**
-
-The computationally expensive part(parameter optimization) is performed classically. The quantum hardware is only used for the energy evaluation step, which scales favorably in parallel with the number of qubits.
+---
 
 ## Theoretical Foundation
 
 ### From Classical Optimization to Quantum Hamiltonian
 
-* **1. Start from the QUBO form:**
-    Any combinatorial optimization problem can be written as a Quadratic Unconstrained Binary Optimization (QUBO) problem:
-        $\min_{x∈\{0,1\}^n} C(x)=x^TQx$
-        
-* **2. Map binary variables to spins:**
-    Binary variables $x_i ∈\{0,1\}$ are replaced by spin variables ${\sigma}_i^z ∈\{-1,+1\}$:
-    $x_i= \frac{1-{\sigma}_i^z}{2}$
-    Substituting this relation transforms the cost function into an Ising Hamiltonian: $H_C = \sum_{i<j}J_{ij} {\sigma}_i^z{\sigma}_j^z + \sum_{i}h_i{\sigma}_i^z$
-    Here $J_{ij}$ and $h_i$ are determined by the elements of $Q$.
-    
-* **3. Ground state $\rightarrow$ optimal solution:**
-    The bitstring that minimizes $C(x)$ corresponds to ground state of $H_C$. Thus, finding the optimal solution becomes equivalent to finding the ground state energy of the system.
-   
+1. **Start from the QUBO form**
+
+Any combinatorial optimization problem can be written as a Quadratic Unconstrained Binary Optimization (QUBO) problem:
+
+min<sub>x∈{0,1}ⁿ</sub> C(x) = xᵀQx
+
+2. **Map binary variables to spins**
+
+Binary variables x<sub>i</sub> ∈ {0,1} are replaced by spin variables σ<sup>z</sup><sub>i</sub> ∈ {−1,+1}:
+
+x<sub>i</sub> = (1 − σ<sup>z</sup><sub>i</sub>) / 2
+
+Substituting this relation transforms the cost function into an Ising Hamiltonian:
+
+H<sub>C</sub> = Σ<sub>i<j</sub> J<sub>ij</sub> σ<sup>z</sup><sub>i</sub> σ<sup>z</sup><sub>j</sub> + Σ<sub>i</sub> h<sub>i</sub> σ<sup>z</sup><sub>i</sub>
+
+Here, J<sub>ij</sub> and h<sub>i</sub> are determined by the elements of Q.
+
+3. **Ground state → optimal solution**
+
+The bitstring that minimizes C(x) corresponds to the ground state of H<sub>C</sub>. Thus, finding the optimal solution becomes equivalent to finding the ground state energy of the system.
+
+---
 
 ### Variational Ansatz
 
-QAOA Prepares a parameterized quantum state that approximates the ground state of $H_C$. It alternates between evolutions under the **cost Hamiltonian** $H_C$ and the **mixer Hamiltonian** $H_M$:
-    $$|{\Psi(\gamma,\beta)}\rangle=\prod_{l=1}^pe^{-i\beta_lH_M}e^{-i\gamma_lH_C}|s\rangle$$
-    
-where;
-*    $p$ is the number of layers(also called depth),
-*    $\gamma=(\gamma_1,...,\gamma_p)$ and $\beta=(\beta_1,...,\beta_p)$ are real-valued parameters,
-*    $|s〉=H^{\otimes n}|0〉^{\otimes n}$ is the uniform superposition of all omputational basis states,
-*    $H_C$ encodes the problem objective,
-*    $H_M=\sum_{i}X_i$ (where $X_i$ are Pauli-X operators) serves as a mixing Hamiltonian that flips qubits.
+QAOA prepares a parameterized quantum state that approximates the ground state of H<sub>C</sub>. It alternates between evolutions under the cost Hamiltonian H<sub>C</sub> and the mixer Hamiltonian H<sub>M</sub>:
 
-The expectation value of $H_C$ under this state,
-    $F_p(\gamma,\beta)=\langle{\Psi(\gamma,\beta)}|H_C|{\Psi(\gamma,\beta)}\rangle$
-is minimized with respect to $\gamma$ and $\beta$ by a classical optimizer.
+|Ψ(γ, β)⟩ = ∏<sub>l=1</sub><sup>p</sup> e<sup>−i β<sub>l</sub> H<sub>M</sub></sup> e<sup>−i γ<sub>l</sub> H<sub>C</sub></sup> |s⟩
 
-## The Algorithm 
+where:
 
-* **1.)** Problem encoding:
-Convert the classical optimization task into a QUBO or Ising model, obtaining the cost Hamiltonian $H_C$.
-* **2.)** Build the ansatz(parametrized quantum circuit):
-Construct the alternating  sequence of unitaries $e^{-i\gamma_lH_C}$ and $e^{-i\beta_lH_M}$, applied to the initial state $|s\rangle$.
-* **3.)** Execute circuit and measure:
-Run the quantum circuit on a simulator or device to estimate the expectation value ($H_C$).
-* **4.)** Classical optimization:
-Use a classical optimizer (COBYLA, etc.) to adjust the parameters $(\gamma,\beta)$ to minimize $H_C$.
-* **5.)** Convergence and measurement:
-Once convergence is reached, measure the final state multiple times to abtain bitstrings. The bitstring corresponding to the lowest energy is the approximate solution to the original optimization problem.
+- p is the number of layers (also called **depth**)  
+- γ = (γ₁, …, γ<sub>p</sub>) and β = (β₁, …, β<sub>p</sub>) are real-valued parameters  
+- |s⟩ = H<sup>⊗n</sup> |0⟩<sup>⊗n</sup> is the uniform superposition of all computational basis states  
+- H<sub>C</sub> encodes the problem objective  
+- H<sub>M</sub> = Σ<sub>i</sub> X<sub>i</sub> (where X<sub>i</sub> are Pauli-X operators) serves as a mixing Hamiltonian that flips qubits
 
- Hybrid Quantum–Classical Optimization Loop
+The expectation value of H<sub>C</sub> under this state,
 
+F<sub>p</sub>(γ, β) = ⟨Ψ(γ, β)| H<sub>C</sub> |Ψ(γ, β)⟩
 
+is minimized with respect to γ and β by a classical optimizer.
 
-### The QAOA Quantum Circuit
+---
 
-A QAOA circuit with depth $p=1$ consists of the following layers:
+## The Algorithm
 
-**1. Initialization:**
-All qubits start in the $|0\rangle$ state, then Hadamard gates prepare a uniform superposition $|s\rangle=H^{\otimes n}|0\rangle^{\otimes n}$.
+1. **Problem encoding:**  
+   Convert the classical optimization task into a QUBO or Ising model, obtaining the cost Hamiltonian H<sub>C</sub>.
 
-**2. Cost Hamiltonian layer:**
-Applies a phase based on the cost function:
-$U_C(\gamma)=e^{-i\gamma H_C}$
-For a two-qubit term $J_{ij}Z_iZ_j$ , this is implemented as
+2. **Build the ansatz (parameterized quantum circuit):**  
+   Construct the alternating sequence of unitaries e<sup>−i γ<sub>l</sub> H<sub>C</sub></sup> and e<sup>−i β<sub>l</sub> H<sub>M</sub></sup>, applied to the initial state |s⟩.
 
-$CNOT(i,j)\rightarrow RZ(2\gamma J_{ij}) \rightarrow CNOT(i,j)$
-Single-qubit bias terms $h_iZ_i$ become $RZ(2\gamma h_i)$ rotations.
+3. **Execute circuit and measure:**  
+   Run the quantum circuit on a simulator or device to estimate the expectation value ⟨H<sub>C</sub>⟩.
 
-**3. Mixer Hamiltonian layer:**
-Applies X-rotations that mix the basis states:
-$U_M(\beta)=e^{-i\beta H_M}= \prod_iR_X(2\beta)$
+4. **Classical optimization:**  
+   Use a classical optimizer (COBYLA, SPSA, etc.) to adjust (γ, β) to minimize ⟨H<sub>C</sub>⟩.
 
-**4. Measurements:**
-The qubits are measured in the computational basis. The most frequently observed bitstrings correspond to low-energy solutions.
+5. **Convergence and measurement:**  
+   Once convergence is reached, measure the final state multiple times to obtain bitstrings. The bitstring corresponding to the lowest energy is the approximate solution to the original optimization problem.
 
-### Detailed Workflow
+---
+
+## The QAOA Quantum Circuit
+
+A QAOA circuit with depth p = 1 consists of the following layers:
+
+1. **Initialization:**  
+   All qubits start in the |0⟩ state, then Hadamard gates prepare a uniform superposition  
+   |s⟩ = H<sup>⊗n</sup> |0⟩<sup>⊗n</sup>.
+
+2. **Cost Hamiltonian layer:**  
+   Applies a phase based on the cost function:
+
+   U<sub>C</sub>(γ) = e<sup>−i γ H<sub>C</sub></sup>
+
+   For a two-qubit term J<sub>ij</sub> Z<sub>i</sub> Z<sub>j</sub>, this is implemented as:
+
+   CNOT(i, j) → RZ(2γJ<sub>ij</sub>) → CNOT(i, j)
+
+   Single-qubit bias terms h<sub>i</sub> Z<sub>i</sub> become RZ(2γh<sub>i</sub>) rotations.
+
+3. **Mixer Hamiltonian layer:**  
+   Applies X-rotations that mix the basis states:
+
+   U<sub>M</sub>(β) = e<sup>−i β H<sub>M</sub></sup> = ∏<sub>i</sub> R<sub>X</sub>(2β)
+
+4. **Measurements:**  
+   The qubits are measured in the computational basis. The most frequently observed bitstrings correspond to low-energy solutions.
+
+---
+
+## Detailed Workflow
 
 | **Step** | **Process** | **Description** |
 |-----------|--------------|-----------------|
-| **1. Problem Encoding** | Define cost function C(x) | Formulate the classical optimization problem and express it as a QUBO: <br> C(x) = xᵀQx. <br> Map to Ising form H<sub>C</sub> = Σ<sub>i,j</sub>J<sub>ij</sub>Z<sub>i</sub>Z<sub>j</sub> + Σ<sub>i</sub>h<sub>i</sub>Z<sub>i</sub>. |
-| **2. Circuit Construction** | Build the QAOA ansatz | Prepare the uniform superposition \|s⟩ = H<sup>⊗n</sup>\|0⟩ and construct *p* alternating layers of cost and mixer unitaries: <br> U<sub>C</sub>(γ) = e<sup>−iγH<sub>C</sub></sup>, U<sub>M</sub>(β) = e<sup>−iβH<sub>M</sub></sup>. |
+| **1. Problem Encoding** | Define cost function C(x) | Formulate the classical optimization problem and express it as a QUBO:<br> C(x) = xᵀQx.<br>Map to Ising form H<sub>C</sub> = Σ<sub>i,j</sub>J<sub>ij</sub>Z<sub>i</sub>Z<sub>j</sub> + Σ<sub>i</sub>h<sub>i</sub>Z<sub>i</sub>. |
+| **2. Circuit Construction** | Build the QAOA ansatz | Prepare the uniform superposition |s⟩ = H<sup>⊗n</sup>|0⟩ and construct *p* alternating layers of cost and mixer unitaries:<br>U<sub>C</sub>(γ) = e<sup>−iγH<sub>C</sub></sup>, U<sub>M</sub>(β) = e<sup>−iβH<sub>M</sub></sup>. |
 | **3. Quantum Execution** | Evaluate the cost expectation | Run the QAOA circuit on a simulator or quantum backend and measure the expected energy ⟨H<sub>C</sub>⟩. |
 | **4. Classical Optimization** | Parameter update loop | Use a classical optimizer (COBYLA, SPSA, BFGS, etc.) to update parameters (γ, β) to minimize ⟨H<sub>C</sub>⟩. Rebuild and re-run the circuit after each update. |
 | **5. Convergence & Measurement** | Final state sampling | Once convergence is reached, measure the final state repeatedly to obtain bitstrings. The bitstring(s) with the lowest energy correspond to approximate or optimal solutions. |
 | **6. Decoding** | Map back to classical solution | Interpret the output bitstring according to the original problem — e.g., a graph partition, schedule, or assignment. |
 
-
+---
 
 ## Intuitive Picture
 Think of QAOA as a quantum analogue of classical simulated annealing:
