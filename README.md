@@ -258,19 +258,6 @@ A QAOA circuit with depth p = 1 consists of the following layers:
 
 ---
 
-## Detailed Workflow
-
-| **Step** | **Process** | **Description** |
-|-----------|--------------|-----------------|
-| **1. Problem Encoding** | Define cost function C(x) | Formulate the classical optimization problem and express it as a QUBO:<br> C(x) = xᵀQx.<br>Map to Ising form H<sub>C</sub> = Σ<sub>i,j</sub>J<sub>ij</sub>Z<sub>i</sub>Z<sub>j</sub> + Σ<sub>i</sub>h<sub>i</sub>Z<sub>i</sub>. |
-| **2. Circuit Construction** | Build the QAOA ansatz | Prepare the uniform superposition |s⟩ = H<sup>⊗n</sup>|0⟩ and construct *p* alternating layers of cost and mixer unitaries:<br>U<sub>C</sub>(γ) = e<sup>−iγH<sub>C</sub></sup>, U<sub>M</sub>(β) = e<sup>−iβH<sub>M</sub></sup>. |
-| **3. Quantum Execution** | Evaluate the cost expectation | Run the QAOA circuit on a simulator or quantum backend and measure the expected energy ⟨H<sub>C</sub>⟩. |
-| **4. Classical Optimization** | Parameter update loop | Use a classical optimizer (COBYLA, SPSA, BFGS, etc.) to update parameters (γ, β) to minimize ⟨H<sub>C</sub>⟩. Rebuild and re-run the circuit after each update. |
-| **5. Convergence & Measurement** | Final state sampling | Once convergence is reached, measure the final state repeatedly to obtain bitstrings. The bitstring(s) with the lowest energy correspond to approximate or optimal solutions. |
-| **6. Decoding** | Map back to classical solution | Interpret the output bitstring according to the original problem — e.g., a graph partition, schedule, or assignment. |
-
----
-
 1. **Problem encoding:**  
    Convert the classical optimization task into a QUBO or Ising model, obtaining the cost Hamiltonian H<sub>C</sub>.
 
