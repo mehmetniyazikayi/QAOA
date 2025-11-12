@@ -101,18 +101,32 @@ Use a classical optimizer (COBYLA, etc.) to adjust the parameters $(\gamma,\beta
 **5.)** Convergence and measurement:
 Once convergence is reached, measure the final state multiple times to abtain bitstrings. The bitstring corresponding to the lowest energy is the approximate solution to the original optimization problem.
 
- Classical Computer                     Quantum Processor
- ─────────────────────────────────────────────────────────────
-  Define H_C, H_M                      Prepare |s⟩ (Hadamards)
-         │                                    │
-         ▼                                    ▼
-  Choose (γ, β) parameters     ───►  Apply U_C(γ), U_M(β)
-         │                                    │
-         │                       ◄───  Measure ⟨H_C⟩
-         ▼
-  Update parameters via optimizer
-         │
-         └─── Repeat until convergence ───────► Done!
+ Hybrid Quantum–Classical Optimization Loop
+
+```mermaid
+flowchart TD
+    subgraph Classical_Computer["Classical Computer "]
+        A1[Define H_C and H_M]
+        A2[Choose (γ, β) parameters]
+        A3[Update parameters via optimizer]
+        A4[Repeat until convergence]
+    end
+
+    subgraph Quantum_Processor["Quantum Processor "]
+        B1[Prepare |s⟩ (Hadamards)]
+        B2[Apply U_C(γ), U_M(β)]
+        B3[Measure ⟨H_C⟩]
+    end
+
+    %% Flow between classical and quantum sides
+    A1 --> B1
+    A2 --> B2
+    B2 --> B3
+    B3 --> A3
+    A3 --> A4
+    A4 --> A2
+``
+
 
 
 
@@ -140,7 +154,7 @@ The qubits are measured in the computational basis. The most frequently observed
 
 ### Detailed Workflow
 
-         | **Step** | **Process** | **Description** |
+| **Step** | **Process** | **Description** |
 |-----------|--------------|-----------------|
 | **1. Problem Encoding** | Define cost function C(x) | Formulate the classical optimization problem and express it as a QUBO: <br> C(x) = xᵀQx. <br> Map to Ising form H<sub>C</sub> = Σ<sub>i,j</sub>J<sub>ij</sub>Z<sub>i</sub>Z<sub>j</sub> + Σ<sub>i</sub>h<sub>i</sub>Z<sub>i</sub>. |
 | **2. Circuit Construction** | Build the QAOA ansatz | Prepare the uniform superposition \|s⟩ = H<sup>⊗n</sup>\|0⟩ and construct *p* alternating layers of cost and mixer unitaries: <br> U<sub>C</sub>(γ) = e<sup>−iγH<sub>C</sub></sup>, U<sub>M</sub>(β) = e<sup>−iβH<sub>M</sub></sup>. |
