@@ -1,400 +1,184 @@
-# Quantum Approximate Optimization Algorithm (QAOA)
+# QAOA — Quantum Approximate Optimization Algorithm
 
-## General Description
+A compact, hands-on implementation and set of notebooks for exploring the Quantum Approximate Optimization Algorithm (QAOA) with Qiskit. This repository provides educational notebooks, example scripts and utilities for:
 
-The Quantum Approximate Optimization Algorithm (QAOA) is a hybrid quantum–classical variational algorithm designed to solve combinatorial optimization problems that can be written as Quadratic Unconstrained Binary Optimization (QUBO) models.
-
-The core idea of QAOA is to encode the objective function of a classical problem into a quantum mechanical energy landscape and to search for its ground state — the configuration of minimal energy, corresponding to the optimal or near-optimal solution.
-
-These problems aim to find a binary configuration x = (x₁, x₂, …, xₙ) that minimizes a given cost function:
-
-C(x) = Σ<sub>i,j</sub> Q<sub>ij</sub> x<sub>i</sub> x<sub>j</sub> + Σ<sub>i</sub> q<sub>i</sub> x<sub>i</sub>
-
-Formally, this can be expressed as:
-
-C(x) = xᵀQx ,  x<sub>i</sub> ∈ {0,1}
-
-which can be mapped to a quantum Hamiltonian H<sub>C</sub> whose ground state encodes the optimal solution.
-
-QAOA searches for this ground state using a parameterized quantum circuit that alternates between two Hamiltonians:
-
-1. The cost Hamiltonian H<sub>C</sub> — encodes the problem objective  
-2. The mixer Hamiltonian H<sub>M</sub> — promotes exploration between bitstrings
-
-By applying these unitaries repeatedly and optimizing their parameters with a classical optimizer, QAOA biases the quantum state toward the optimal or near-optimal solution.
-
-QAOA combines the strengths of both paradigms:
-
-- Quantum mechanics provides a large Hilbert space in which all possible solutions coexist in superposition and evolve under interference.
-- Classical optimization guides the search by iteratively updating parameters to minimize the measured energy.
-- Variational design (VQA) makes QAOA practical for today’s noisy intermediate-scale quantum (NISQ) devices by requiring only shallow, parameterized circuits.
+- encoding QUBO/Ising problems,
+- building QAOA circuits,
+- running them on simulators and (optionally) real quantum backends,
+- visualizing and analyzing results.
 
 ---
 
-## Why QAOA
-
-Classical algorithms for NP-hard problems (e.g., simulated annealing, tabu search, genetic algorithms) explore the search space sequentially or heuristically. For large-scale problems, the number of feasible configurations grows exponentially, and even advanced heuristics struggle to find optimal or near-optimal solutions.
-
-QAOA provides several major advantages:
-
-1. **Quantum Parallelism**  
-   The quantum state encodes all possible solutions simultaneously, exploring an exponentially large space in one coherent evolution.
-
-2. **Constructive Interference**  
-   Proper parameter choices cause good solutions to interfere constructively while suppressing poor ones, concentrating probability near low-energy states.
-
-3. **Adaptability**  
-   Any optimization problem expressible as a QUBO or an Ising Hamiltonian can be embedded into QAOA by defining a suitable cost Hamiltonian.
-
-4. **Near-term Feasibility**  
-   QAOA circuits are relatively shallow (often depth p = 1–3), which makes them executable on current NISQ hardware.
-
-5. **Hybrid Optimization Loop**  
-   The computationally expensive parameter optimization runs classically, while the quantum processor is used only for evaluating expectation values ⟨H<sub>C</sub>⟩.
+Table of contents
+- Overview
+- Quickstart
+- Algorithm flow (visual)
+- QAOA circuit (visual)
+- Implementation notes
+- Examples & notebooks
+- Tips & best practices
+- Contributing
+- License
+- References
+- Contact
 
 ---
 
-## Theoretical Foundation
+## Overview
 
-### From Classical Optimization to Quantum Hamiltonian
-
-1. **Start from the QUBO form**
-
-Any combinatorial optimization problem can be written as a Quadratic Unconstrained Binary Optimization (QUBO) problem:
-
-min<sub>x∈{0,1}ⁿ</sub> C(x) = xᵀQx
-
-2. **Map binary variables to spins**
-
-Binary variables x<sub>i</sub> ∈ {0,1} are replaced by spin variables σ<sup>z</sup><sub>i</sub> ∈ {−1,+1}:
-
-x<sub>i</sub> = (1 − σ<sup>z</sup><sub>i</sub>) / 2
-
-Substituting this relation transforms the cost function into an Ising Hamiltonian:
-
-H<sub>C</sub> = Σ<sub>i<j</sub> J<sub>ij</sub> σ<sup>z</sup><sub>i</sub> σ<sup>z</sup><sub>j</sub> + Σ<sub>i</sub> h<sub>i</sub> σ<sup>z</sup><sub>i</sub>
-
-Here, J<sub>ij</sub> and h<sub>i</sub> are determined by the elements of Q.
-
-3. **Ground state → optimal solution**
-
-The bitstring that minimizes C(x) corresponds to the ground state of H<sub>C</sub>. Thus, finding the optimal solution becomes equivalent to finding the ground state energy of the system.
+QAOA is a hybrid quantum–classical variational algorithm for approximately solving combinatorial optimization problems that can be expressed as QUBO or Ising models. The algorithm alternates between applying the cost (problem) Hamiltonian and a mixer Hamiltonian to bias the quantum state toward low-energy solutions, while a classical optimizer updates parameters to minimize the measured energy.
 
 ---
 
-### Variational Ansatz
+## Quickstart
 
-QAOA prepares a parameterized quantum state that approximates the ground state of H<sub>C</sub>. It alternates between evolutions under the cost Hamiltonian H<sub>C</sub> and the mixer Hamiltonian H<sub>M</sub>:
+Prerequisites
+- Git
+- Python 3.10+ (3.12 recommended where supported)
+- Conda or virtualenv recommended
+- (Optional) IBM Quantum account for running on real devices
 
-|Ψ(γ, β)⟩ = ∏<sub>l=1</sub><sup>p</sup> e<sup>−i β<sub>l</sub> H<sub>M</sub></sup> e<sup>−i γ<sub>l</sub> H<sub>C</sub></sup> |s⟩
+Clone the repo
+```bash
+git clone https://github.com/mehmetniyazikayi/QAOA.git
+cd QAOA
+```
 
-where:
+Create environment (conda example)
+```bash
+conda create --name qaoa-env python=3.12 -y
+conda activate qaoa-env
+pip install -r requirements.txt
+# or, if no requirements.txt:
+# pip install qiskit qiskit-aer qiskit-ibm-runtime qiskit-algorithms numpy scipy matplotlib notebook
+```
 
-- p is the number of layers (also called **depth**)  
-- γ = (γ₁, …, γ<sub>p</sub>) and β = (β₁, …, β<sub>p</sub>) are real-valued parameters  
-- |s⟩ = H<sup>⊗n</sup> |0⟩<sup>⊗n</sup> is the uniform superposition of all computational basis states  
-- H<sub>C</sub> encodes the problem objective  
-- H<sub>M</sub> = Σ<sub>i</sub> X<sub>i</sub> (where X<sub>i</sub> are Pauli-X operators) serves as a mixing Hamiltonian that flips qubits
+Run notebooks
+```bash
+jupyter notebook
+# or
+jupyter lab
+```
+Open the notebooks/ directory and run them in order. Start with `notebooks/01_intro_qaoa.ipynb`.
 
-The expectation value of H<sub>C</sub> under this state,
-
-F<sub>p</sub>(γ, β) = ⟨Ψ(γ, β)| H<sub>C</sub> |Ψ(γ, β)⟩
-
-is minimized with respect to γ and β by a classical optimizer.
-
----
-
-## The Algorithm# Quantum Approximate Optimization Algorithm (QAOA)
-
-## General Description
-
-The Quantum Approximate Optimization Algorithm (QAOA) is a hybrid quantum–classical variational algorithm designed to solve combinatorial optimization problems that can be written as Quadratic Unconstrained Binary Optimization (QUBO) models.
-
-The core idea of QAOA is to encode the objective function of a classical problem into a quantum mechanical energy landscape and to search for its ground state — the configuration of minimal energy, corresponding to the optimal or near-optimal solution.
-
-These problems aim to find a binary configuration x = (x₁, x₂, …, xₙ) that minimizes a given cost function:
-
-C(x) = Σ<sub>i,j</sub> Q<sub>ij</sub> x<sub>i</sub> x<sub>j</sub> + Σ<sub>i</sub> q<sub>i</sub> x<sub>i</sub>
-
-Formally, this can be expressed as:
-
-C(x) = xᵀQx ,  x<sub>i</sub> ∈ {0,1}
-
-which can be mapped to a quantum Hamiltonian H<sub>C</sub> whose ground state encodes the optimal solution.
-
-QAOA searches for this ground state using a parameterized quantum circuit that alternates between two Hamiltonians:
-
-1. The cost Hamiltonian H<sub>C</sub> — encodes the problem objective  
-2. The mixer Hamiltonian H<sub>M</sub> — promotes exploration between bitstrings
-
-By applying these unitaries repeatedly and optimizing their parameters with a classical optimizer, QAOA biases the quantum state toward the optimal or near-optimal solution.
-
-QAOA combines the strengths of both paradigms:
-
-- Quantum mechanics provides a large Hilbert space in which all possible solutions coexist in superposition and evolve under interference.
-- Classical optimization guides the search by iteratively updating parameters to minimize the measured energy.
-- Variational design (VQA) makes QAOA practical for today’s noisy intermediate-scale quantum (NISQ) devices by requiring only shallow, parameterized circuits.
+Example script (replace with actual script names in the repo)
+```bash
+python examples/run_qaoa_simple.py --problem data/sample_qubo.json --p 1 --shots 1024
+```
 
 ---
 
-## Why QAOA
+## Algorithm flow 
 
-Classical algorithms for NP-hard problems (e.g., simulated annealing, tabu search, genetic algorithms) explore the search space sequentially or heuristically. For large-scale problems, the number of feasible configurations grows exponentially, and even advanced heuristics struggle to find optimal or near-optimal solutions.
+A compact visual of the hybrid classical–quantum loop. This is your ASCII diagram, slightly cleaned for alignment and readability:
+```
 
-QAOA provides several major advantages:
+Classical Computer                     Quantum Processor
+─────────────────────────────────────────────────────────────
+ Define H_C, H_M                      Prepare |s⟩ (Hadamards)
+          │                                     │
+          ▼                                     ▼
+ Choose (γ, β) parameters     ───►   Apply U_C(γ), U_M(β)
+          │                                     │
+          │                        ◄───   Measure ⟨H_C⟩
+          ▼
+ Update parameters via optimizer
+          │
+ ─────────┴───────── Repeat until convergence ─────────►
 
-1. **Quantum Parallelism**  
-   The quantum state encodes all possible solutions simultaneously, exploring an exponentially large space in one coherent evolution.
+``` 
 
-2. **Constructive Interference**  
-   Proper parameter choices cause good solutions to interfere constructively while suppressing poor ones, concentrating probability near low-energy states.
-
-3. **Adaptability**  
-   Any optimization problem expressible as a QUBO or an Ising Hamiltonian can be embedded into QAOA by defining a suitable cost Hamiltonian.
-
-4. **Near-term Feasibility**  
-   QAOA circuits are relatively shallow (often depth p = 1–3), which makes them executable on current NISQ hardware.
-
-5. **Hybrid Optimization Loop**  
-   The computationally expensive parameter optimization runs classically, while the quantum processor is used only for evaluating expectation values ⟨H<sub>C</sub>⟩.
-
----
-
-## Theoretical Foundation
-
-### From Classical Optimization to Quantum Hamiltonian
-
-1. **Start from the QUBO form**
-
-Any combinatorial optimization problem can be written as a Quadratic Unconstrained Binary Optimization (QUBO) problem:
-
-min<sub>x∈{0,1}ⁿ</sub> C(x) = xᵀQx
-
-2. **Map binary variables to spins**
-
-Binary variables x<sub>i</sub> ∈ {0,1} are replaced by spin variables σ<sup>z</sup><sub>i</sub> ∈ {−1,+1}:
-
-x<sub>i</sub> = (1 − σ<sup>z</sup><sub>i</sub>) / 2
-
-Substituting this relation transforms the cost function into an Ising Hamiltonian:
-
-H<sub>C</sub> = Σ<sub>i<j</sub> J<sub>ij</sub> σ<sup>z</sup><sub>i</sub> σ<sup>z</sup><sub>j</sub> + Σ<sub>i</sub> h<sub>i</sub> σ<sup>z</sup><sub>i</sub>
-
-Here, J<sub>ij</sub> and h<sub>i</sub> are determined by the elements of Q.
-
-3. **Ground state → optimal solution**
-
-The bitstring that minimizes C(x) corresponds to the ground state of H<sub>C</sub>. Thus, finding the optimal solution becomes equivalent to finding the ground state energy of the system.
+Step-by-step (expanded)
+1. Classical: choose or update parameters $(γ, β)$  
+2. Quantum: prepare $|s⟩$ and apply alternating unitaries $U_C$, $U_M$ with given parameters  
+3. Quantum: measure to estimate $⟨H_C⟩$ (expectation of the cost Hamiltonian)  
+4. Classical: evaluate cost, update parameters using an optimizer (COBYLA, SPSA, etc.)  
+5. Repeat until convergence or stopping condition
 
 ---
 
-### Variational Ansatz
+## QAOA circuit (p = 1) 
 
-QAOA prepares a parameterized quantum state that approximates the ground state of H<sub>C</sub>. It alternates between evolutions under the cost Hamiltonian H<sub>C</sub> and the mixer Hamiltonian H<sub>M</sub>:
+- Initialization: apply H^⊗n to $|0⟩^⊗n$ to prepare $|s⟩$ (uniform superposition)  
+- Cost layer $U_C(γ)$: implement $ZZ$ coupling terms $(J_ij Z_i Z_j)$ and Z-bias terms $(h_i Z_i)$. Typical implementation for a two-qubit $ZZ$ term:
+  $CNOT(i, j) → RZ(2γ J_ij)$ on qubit $j → CNOT(i, j)$
+- Mixer layer $U_M(β)$: apply $RX(2β)$ on every qubit (implements $e^{-i β Σ_i X_i}$)
+- Measurement: measure qubits in the computational basis; collect bitstrings and estimate energies
 
-|Ψ(γ, β)⟩ = ∏<sub>l=1</sub><sup>p</sup> e<sup>−i β<sub>l</sub> H<sub>M</sub></sup> e<sup>−i γ<sub>l</sub> H<sub>C</sub></sup> |s⟩
-
-where:
-
-- p is the number of layers (also called **depth**)  
-- γ = (γ₁, …, γ<sub>p</sub>) and β = (β₁, …, β<sub>p</sub>) are real-valued parameters  
-- |s⟩ = H<sup>⊗n</sup> |0⟩<sup>⊗n</sup> is the uniform superposition of all computational basis states  
-- H<sub>C</sub> encodes the problem objective  
-- H<sub>M</sub> = Σ<sub>i</sub> X<sub>i</sub> (where X<sub>i</sub> are Pauli-X operators) serves as a mixing Hamiltonian that flips qubits
-
-The expectation value of H<sub>C</sub> under this state,
-
-F<sub>p</sub>(γ, β) = ⟨Ψ(γ, β)| H<sub>C</sub> |Ψ(γ, β)⟩
-
-is minimized with respect to γ and β by a classical optimizer.
+Simple ASCII circuit (p = 1)
+```
+q0: ──H───■────RZ(θ)──■───Rx(φ)───M──
+          │            │
+q1: ──H───■────RZ(θ)──■───Rx(φ)───M──
+``` 
+Notes:
+- Each two-qubit $J_{ij}$ term maps to a $CNOT—RZ—CNOT$ sequence.
+- Single-qubit bias $h_i$ maps to a single $RZ$ rotation.
 
 ---
 
-## The Algorithm
+## Implementation notes
 
-1. **Problem encoding:**  
-   Convert the classical optimization task into a QUBO or Ising model, obtaining the cost Hamiltonian H<sub>C</sub>.
+- Binary-to-spin mapping:
+  $x_i ∈ {0,1} → σ^z_i ∈ {−1,+1}$ with $x_i = (1 − σ^z_i) / 2$
+- Cost Hamiltonian $H_C$ built from the QUBO matrix Q and single-qubit biases
+- Mixer Hamiltonian $H_M$ typically is $∑_i X_i$ (single-qubit $RX$ rotations). Custom mixers are possible for problem-specific constraints.
+- Variational ansatz (depth p):
+  $Ψ(γ, β) = ∏_{l=1..p} e^{-i β_l H_M} e^{-i γ_l H_C} |s⟩$
+- Objective: minimize $F_p(γ, β) = ⟨Ψ(γ,β)| H_C |Ψ(γ,β)⟩$ using a classical optimizer
 
-2. **Build the ansatz (parameterized quantum circuit):**  
-   Construct the alternating sequence of unitaries e<sup>−i γ<sub>l</sub> H<sub>C</sub></sup> and e<sup>−i β<sub>l</sub> H<sub>M</sub></sup>, applied to the initial state |s⟩.
-
-3. **Execute circuit and measure:**  
-   Run the quantum circuit on a simulator or device to estimate the expectation value ⟨H<sub>C</sub>⟩.
-
-4. **Classical optimization:**  
-   Use a classical optimizer (COBYLA, SPSA, etc.) to adjust (γ, β) to minimize ⟨H<sub>C</sub>⟩.
-
-5. **Convergence and measurement:**  
-   Once convergence is reached, measure the final state multiple times to obtain bitstrings. The bitstring corresponding to the lowest energy is the approximate solution to the original optimization problem.
+Practical considerations
+- Start with p = 1 or 2 to gain intuition. Increasing p can improve solutions but increases circuit depth and optimizer complexity.
+- Use simulators (qiskit-aer) for parameter sweeps and debugging.
+- When running on real hardware, use small instances and apply error mitigation strategies.
 
 ---
 
-## The QAOA Quantum Circuit
+## Using IBM Quantum backends (optional)
 
-A QAOA circuit with depth p = 1 consists of the following layers:
-
-1. **Initialization:**  
-   All qubits start in the |0⟩ state, then Hadamard gates prepare a uniform superposition  
-   |s⟩ = H<sup>⊗n</sup> |0⟩<sup>⊗n</sup>.
-
-2. **Cost Hamiltonian layer:**  
-   Applies a phase based on the cost function:
-
-   U<sub>C</sub>(γ) = e<sup>−i γ H<sub>C</sub></sup>
-
-   For a two-qubit term J<sub>ij</sub> Z<sub>i</sub> Z<sub>j</sub>, this is implemented as:
-
-   CNOT(i, j) → RZ(2γJ<sub>ij</sub>) → CNOT(i, j)
-
-   Single-qubit bias terms h<sub>i</sub> Z<sub>i</sub> become RZ(2γh<sub>i</sub>) rotations.
-
-3. **Mixer Hamiltonian layer:**  
-   Applies X-rotations that mix the basis states:
-
-   U<sub>M</sub>(β) = e<sup>−i β H<sub>M</sub></sup> = ∏<sub>i</sub> R<sub>X</sub>(2β)
-
-4. **Measurements:**  
-   The qubits are measured in the computational basis. The most frequently observed bitstrings correspond to low-energy solutions.
+1. Install and configure IBM credentials (see qiskit-ibm-runtime docs).
+2. Example usage in a notebook/script:
+```python
+from qiskit_ibm_runtime import IBMProvider
+provider = IBMProvider()
+backend = provider.backends(simulator=False)[0]  # choose an available device
+```
+3. Prefer small instances on real devices; apply error mitigation and keep circuits shallow.
 
 ---
 
-1. **Problem encoding:**  
-   Convert the classical optimization task into a QUBO or Ising model, obtaining the cost Hamiltonian H<sub>C</sub>.
+## Tips & best practices
 
-2. **Build the ansatz (parameterized quantum circuit):**  
-   Construct the alternating sequence of unitaries e<sup>−i γ<sub>l</sub> H<sub>C</sub></sup> and e<sup>−i β<sub>l</sub> H<sub>M</sub></sup>, applied to the initial state |s⟩.
-
-3. **Execute circuit and measure:**  
-   Run the quantum circuit on a simulator or device to estimate the expectation value ⟨H<sub>C</sub>⟩.
-
-4. **Classical optimization:**  
-   Use a classical optimizer (COBYLA, SPSA, etc.) to adjust (γ, β) to minimize ⟨H<sub>C</sub>⟩.
-
-5. **Convergence and measurement:**  
-   Once convergence is reached, measure the final state multiple times to obtain bitstrings. The bitstring corresponding to the lowest energy is the approximate solution to the original optimization problem.
+- Reuse good parameters as initial guesses when increasing p.
+- For noisy hardware, reduce depth and apply mitigation.
+- Use random restarts or multiple optimizers if stuck in local minima.
+- Record measurement seeds and optimizer states for reproducibility.
 
 ---
 
-## The QAOA Quantum Circuit
+## Contributing
 
-A QAOA circuit with depth p = 1 consists of the following layers:
-
-1. **Initialization:**  
-   All qubits start in the |0⟩ state, then Hadamard gates prepare a uniform superposition  
-   |s⟩ = H<sup>⊗n</sup> |0⟩<sup>⊗n</sup>.
-
-2. **Cost Hamiltonian layer:**  
-   Applies a phase based on the cost function:
-
-   U<sub>C</sub>(γ) = e<sup>−i γ H<sub>C</sub></sup>
-
-   For a two-qubit term J<sub>ij</sub> Z<sub>i</sub> Z<sub>j</sub>, this is implemented as:
-
-   CNOT(i, j) → RZ(2γJ<sub>ij</sub>) → CNOT(i, j)
-
-   Single-qubit bias terms h<sub>i</sub> Z<sub>i</sub> become RZ(2γh<sub>i</sub>) rotations.
-
-3. **Mixer Hamiltonian layer:**  
-   Applies X-rotations that mix the basis states:
-
-   U<sub>M</sub>(β) = e<sup>−i β H<sub>M</sub></sup> = ∏<sub>i</sub> R<sub>X</sub>(2β)
-
-4. **Measurements:**  
-   The qubits are measured in the computational basis. The most frequently observed bitstrings correspond to low-energy solutions.
+Contributions are welcome — issues, feature requests and PRs:
+- Open an issue describing the problem or feature.
+- Fork the repo, create a topic branch, and open a PR with a clear description and tests/examples where applicable.
+- Use descriptive commit messages and include tests or example notebooks where relevant.
 
 ---
 
-## Detailed Workflow
+## License
 
-| **Step** | **Process** | **Description** |
-|-----------|--------------|-----------------|
-| **1. Problem Encoding** | Define cost function C(x) | Formulate the classical optimization problem and express it as a QUBO:<br> C(x) = xᵀQx.<br>Map to Ising form H<sub>C</sub> = Σ<sub>i,j</sub>J<sub>ij</sub>Z<sub>i</sub>Z<sub>j</sub> + Σ<sub>i</sub>h<sub>i</sub>Z<sub>i</sub>. |
-| **2. Circuit Construction** | Build the QAOA ansatz | Prepare the uniform superposition |s⟩ = H<sup>⊗n</sup>|0⟩ and construct *p* alternating layers of cost and mixer unitaries:<br>U<sub>C</sub>(γ) = e<sup>−iγH<sub>C</sub></sup>, U<sub>M</sub>(β) = e<sup>−iβH<sub>M</sub></sup>. |
-| **3. Quantum Execution** | Evaluate the cost expectation | Run the QAOA circuit on a simulator or quantum backend and measure the expected energy ⟨H<sub>C</sub>⟩. |
-| **4. Classical Optimization** | Parameter update loop | Use a classical optimizer (COBYLA, SPSA, BFGS, etc.) to update parameters (γ, β) to minimize ⟨H<sub>C</sub>⟩. Rebuild and re-run the circuit after each update. |
-| **5. Convergence & Measurement** | Final state sampling | Once convergence is reached, measure the final state repeatedly to obtain bitstrings. The bitstring(s) with the lowest energy correspond to approximate or optimal solutions. |
-| **6. Decoding** | Map back to classical solution | Interpret the output bitstring according to the original problem — e.g., a graph partition, schedule, or assignment. |
+- Placeholder: will be updated.
 
 ---
 
-## Intuitive Picture
-Think of QAOA as a quantum analogue of classical simulated annealing:
+## References
 
-*    The cost Hamiltonian guides the system toward low-energy (good) solutions.
-*    The mixer Hamiltonian injects “quantum motion” that allows exploration of the space.
-*    The alternation between the two mimics cooling: as parameters optimize, probability density accumulates in regions of low energy.
+- QAOA original paper: E. Farhi et al., "A Quantum Approximate Optimization Algorithm", 2014.
+- Qiskit documentation and tutorials: https://qiskit.org/documentation
 
-For small depth $p$, QAOA yields approximate solutions; as $p\rightarrow ∞$, it approaches the exact ground state solution.
+---
 
-### Pros. & Cons.
-Advantages
+## Contact
 
-*   Works on today’s hardware (NISQ-ready).
-
-*	General framework — applicable to any QUBO-formulated problem.
-
-*	Tunable trade-off between circuit depth and solution quality.
-
-*	Naturally hybrid: leverages both quantum and classical resources.
-
-Limitations
-
-*	Performance depends strongly on the choice of initial parameters and optimizer.
-
-*	Quantum noise can affect the accuracy of measured energies.
-
-*	Number of qubits required grows with problem size (scalability challenge).
-
-## Accessing Resources
-### OPTION 1: Jupyter Notebook
-### OPTION 2: Local Installation
-1. Git is required for accessing the resources. In case Git isn't already available on your Computer: [Get Git](https://git-scm.com/downloads)
-
-2. Get Anaconda (recommended) or pyflow
-    - Installation instructions for your OS can be found here: [Get Anaconda](https://www.anaconda.com/download/)
-    - for Ubuntu/Debian run following command in a terminal after installation:
-    ```
-    source ~/.bashrc
-    ```
-
-3. Create a virtual Python environment:
-    - if you are using a Unix or Linux OS, use the `create_conda_env.sh`
-    - else: open a command shell, or the Anaconda Navigator and open Powershell Prompt.
-
-        - Create a new Python environment (3.12 is best if possible)
-        ```
-        (base) ~$ conda create --name qiskitenv python=3.12
-        ```
-        
-        - Activate the environment
-        ```
-        (base) ~$ conda activate qiskitenv
-        ```
-
-        - Install required packages
-        ```
-        (qiskitenv) ~$ conda install notebook ipykernel 
-        ```
-        - Create kernel
-        ```
-        (qiskitenv) ~$ python -m ipykernel install --user --name qiskitenv
-        ```
-        - Install required qiskit packages
-        ```
-        (qiskitenv) ~$ pip install qiskit[visualization]==1.4.3 qiskit-aer qiskit-ibm-runtime qiskit-algorithms qiskit-machine-learning qiskit-nature qiskit-optimization qiskit-finance qiskit-dynamics 
-        ```
-
-4. Open the notebook
-    - either use VScode and select the kernel `qiskitenv`,
-    - or start a jupyter instance on your machine using your Web Browser: [Jupyter Notebook Documentation](https://jupyter-notebook-beginner-guide.readthedocs.io/en/latest/execute.html)
-    - on Ubuntu/Debian type:
-    ```
-    Username@Hostname: ~$ jupyter notebook
-    ```
-    - on Windows use the Anaconda Navigator to start a jupyter notebook
-
-5. Clone the repository
-    - Use the below command and start enjoying the exercises.
-    ```
-    git clone https://github.com/mehmetniyazikayi/QAOA.git
-    ```
+- Repository owner: @mehmetniyazikayi  
+- For questions, open an issue or pull request.
