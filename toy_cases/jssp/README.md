@@ -4,8 +4,8 @@ This repository demonstrates how to model the Job Shop Scheduling Problem (JSSP)
 
 Contents
 - README.md — this file
-- notebooks/ — interactive walkthroughs and examples (small JSSP instances, visualization)
-- utilities/ — helper scripts, requirements, environment files, and helper modules to build QUBO, map to Ising, run QAOA, and plot Gantt charts
+- notebooks/ — interactive walkthroughs and examples (small JSSP instances, visualization), helper scripts and helper modules to build QUBO, map to Ising, run QAOA, and plot Gantt charts
+- utilities/ — requirements, environment files
 
 Quick summary
 - Variables: $x_{k,t} = 1$ if operation $k$ starts at time $t$
