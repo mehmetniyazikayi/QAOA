@@ -30,33 +30,40 @@ maxcut/
 - utilities/
   - qiskit/
     - conda_env.sh
+    - requirements.txt
     - qiskit_container.def
   - qulacs/
     - conda_env.sh
+    - requirements.txt
     - qulacs_container.def
   - qsim/
+    - conda_env.sh
+    - requirements.txt
+    - qsim_container.def
   - cudaq/
   - pennylane/
-  - qubo/
+  - qibo/
   - qutip/
+  - qudora/
 - notebooks/
-  - maxcut_qiskit.iphyn
-  - maxcut_qulacs.iphyn
-  - maxcut_qsim.iphyn
-  - maxcut_qubo.iphyn
-  - maxcut_cudaq.iphyn
-  - maxcut_pennylane.iphyn
-  - maxcut_qutip.iphyn
+  - maxcut_qiskit.ipynb
+  - maxcut_qulacs.ipynb
+  - maxcut_qsim.ipynb
+  - maxcut_qubo.ipynb
+  - maxcut_cudaq.ipynb
+  - maxcut_pennylane.ipynb
+  - maxcut_qutip.ipynb
+  - maxcut_comparison.ipynb
 
 Notes:
-- The `utilities/` folder contains per-SDK environment and container definitions (where provided) and should also host shared helper scripts (graph generation, converters, cost evaluators). Place common utilities at `utilities/shared/` or at the top of `utilities/` if preferred.
-- The `notebooks/` folder holds portable problem-instance notebooks or `.iphyn` files tailored per SDK.
+- The `utilities/` folder contains per-SDK environment and container definitions (where provided) and should also host shared helper scripts (graph generation, converters, cost evaluators). Place common utilities at the top of `utilities/` if preferred.
+- The `notebooks/` folder holds portable problem-instance notebooks or `.ipynb` files tailored per SDK.
 
 ## What to include in each SDK utility folder
 
 - conda environment script: `conda_env.sh` — creates a reproducible environment for examples and CI.
 - container definition: `*_container.def` — Singularity/Apptainer or similar container recipe to reproduce runtime environment (optional but recommended).
-- Example driver scripts or notebooks (placed under `utilities/<sdk>/examples/` OR under separate top-level SDK folders if you prefer).
+- Example driver scripts or notebooks (placed under `notebooks/maxcut_*.ipynb` OR under separate top-level SDK folders if you prefer).
 
 ## Circuit construction notes (SDK-agnostic)
 
@@ -83,12 +90,12 @@ Notes:
 
 ## Notebooks / .iphyn files
 
-The `notebooks/` folder already lists per-SDK `.iphyn` files. Use these to:
+The `notebooks/` folder already lists per-SDK `.ipynb` files. Use these to:
 - encode the problem instance (nodes, edges, weights, seed),
 - include example parameter sets and expected outputs (best bitstrings) for reproducibility,
 - demonstrate how to load the same instance across different SDKs.
 
-Example `maxcut_*.iphyn` fields (JSON-like):
+Example `maxcut_*.ipynb` fields (JSON-like):
 - name, nodes, edges (i, j, w), seed, recommended $p$, recommended initial $(\gamma,\beta)$.
 
 ## Testing & CI recommendations
@@ -103,7 +110,7 @@ Example `maxcut_*.iphyn` fields (JSON-like):
 
 - utilities/<sdk>/conda_env.sh — environment creation script (already present for qiskit and qulacs)
 - utilities/<sdk>/*_container.def — container recipes (already present for qiskit and qulacs)
-- notebooks/*.iphyn — problem instance files (already listed)
+- notebooks/*.ipynb — problem instance files (already listed)
 
 ## References
 
