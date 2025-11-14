@@ -1,0 +1,13 @@
+Bootstrap: docker
+From: condaforge/miniforge3
+
+%post
+        conda install --quiet --yes \
+                'notebook>=7.0.3' \
+                'jupyterhub==4.0.0' \
+                'jupyterlab>=4.0.5' \
+                'ipyparallel>=8.6.1' \
+                scipy numpy matplotlib lmfit pandas
+
+        pip install qiskit[visualization] qiskit-aer qiskit-ibm-runtime qiskit-algorithms qiskit-machine-learning qiskit-nature qiskit-optimization qiskit-finance qiskit-dynamics qiskit
+

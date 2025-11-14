@@ -1,0 +1,10 @@
+qudora
+networkx
+numpy
+scipy
+matplotlib
+pandas
+notebook
+jupyterlab
+ipyparallel
+

@@ -1,0 +1,5 @@
+qulacs
+qulacsvis
+numpy
+scipy
+

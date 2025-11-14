@@ -1,0 +1,7 @@
+qsimcirq
+cirq-core
+cirq-google
+numpy
+scipy
+networkx
+

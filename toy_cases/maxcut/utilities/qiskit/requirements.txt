@@ -1,0 +1,8 @@
+qiskit==1.3.2
+qiskit-aer
+qiskit-algorithms
+qiskit-optimization
+numpy
+scipy
+networkx
+

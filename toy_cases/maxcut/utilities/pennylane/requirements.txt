@@ -1,0 +1,5 @@
+pennylane
+pennylane-lightning
+numpy
+networkx
+

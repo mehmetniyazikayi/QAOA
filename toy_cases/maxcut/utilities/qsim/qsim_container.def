@@ -1,0 +1,16 @@
+Bootstrap: docker
+From: condaforge/miniforge3
+
+%post
+        addgroup --system --gid 300 slurmadmin
+        adduser --system --uid 300 --gid 300 --home /opt/slurm/slurm \
+                --shell /bin/false slurmadmin
+
+        conda install --quiet --yes \
+                'notebook>=7.0.3' \
+                'jupyterhub==4.0.0' \
+                'jupyterlab>=4.0.5' \
+                'ipyparallel>=8.6.1'
+
+        pip install qsimcirq
+

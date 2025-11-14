@@ -1,0 +1,20 @@
+Bootstrap: docker
+From: condaforge/miniforge3
+
+%post
+        # Jupyter + scientific Python stack
+        conda install --quiet --yes \
+                "notebook>=7.0.3" \
+                "jupyterhub==4.0.0" \
+                "jupyterlab>=4.0.5" \
+                "ipyparallel>=8.6.1" \
+                scipy \
+                numpy \
+                matplotlib \
+                pandas \
+                networkx
+
+        # PennyLane core + fast statevector simulator for Max-Cut QAOA
+        pip install --no-cache-dir \
+                pennylane \
+                pennylane-lightning

@@ -1,0 +1,11 @@
+qibo
+qibo-backend-numpy
+networkx
+numpy
+scipy
+matplotlib
+pandas
+notebook
+jupyterlab
+ipyparallel
+
