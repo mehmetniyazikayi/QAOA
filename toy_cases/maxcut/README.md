@@ -101,8 +101,6 @@ Example `maxcut_*.iphyn` fields (JSON-like):
 
 ## Files to add or verify
 
-- utilities/shared/graph.py — graph creation utilities ($C_n, K_n, G(n,p)$)
-- utilities/shared/convert.py — graph ↔ QUBO/Ising converters, cost evaluator
 - utilities/<sdk>/conda_env.sh — environment creation script (already present for qiskit and qulacs)
 - utilities/<sdk>/*_container.def — container recipes (already present for qiskit and qulacs)
 - notebooks/*.iphyn — problem instance files (already listed)
