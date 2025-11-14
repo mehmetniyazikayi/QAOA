@@ -61,37 +61,14 @@ Notes:
 ## Circuit construction notes (SDK-agnostic)
 
 - Phase separator for edge $(i,j)$: implement $\exp\!\big(-i \gamma (1 - Z_i Z_j)/2\big)$.
-  - Implement $Z_i Z_j$ using CNOT$(i\to j)$; $RZ(2\gamma w_{ij})$ on $j$; CNOT$(i\to j)$ (or controlled-phase).
+  - Implement $Z_i Z_j$ using $CNOT(i\to j)$; $RZ(2\gamma w_{ij})$ on $j; CNOT(i\to j)$ (or controlled-phase).
 - Mixer: single-qubit $X$-rotations $R_X(2\beta)$ on each qubit.
 - Repeat phase + mixer for $p$ layers.
 - Verify gate-angle sign and factor conventions per SDK (RZ/rotation conventions vary).
 
 ## Measurement, cost evaluation & reporting
 
-- For a measured bitstring $s$ compute: \maxcut
-                     \readme.md
-                     \utilities
-                             \qiskit
-                                conda_env.sh	
-                                qiskit_container.def
-                             \qulacs
-                               conda_env.sh	
-                               qulacs_container.def
-                             \qsim
-                             \cudaq
-                             \pennylane
-                             \qubo
-                             \qutip
-                     \notebooks
-                          \maxcut_qiskit.iphyn
-                          \maxcut_qulacs.iphyn
-                          \maxcut_qsim.iphyn
-                          \maxcut_qubo.iphyn
-                          \maxcut_cudaq.iphyn
-                          \maxcut_pennylane.iphyn
-                          \maxcut_qutip.iphyn
-                     
-                   
+- For a measured bitstring $s$ compute:                 
   $\text{cut}(s) = \sum_{(i,j)\in E} w_{ij}\,[s_i \ne s_j]$
 - Estimate expectation via sample mean or compute exact $\langle \psi| H_C |\psi \rangle$ for statevector simulators.
 - Report: best sampled cut & bitstring, mean cut ± std, approximation ratio $\dfrac{\text{observed-cut}}{\text{max-cut-value}}$ (if known), optimizer iterations, wall-clock time.
@@ -124,7 +101,7 @@ Example `maxcut_*.iphyn` fields (JSON-like):
 
 ## Files to add or verify
 
-- utilities/shared/graph.py — graph creation utilities (C_n, K_n, G(n,p))
+- utilities/shared/graph.py — graph creation utilities ($C_n, K_n, G(n,p)$)
 - utilities/shared/convert.py — graph ↔ QUBO/Ising converters, cost evaluator
 - utilities/<sdk>/conda_env.sh — environment creation script (already present for qiskit and qulacs)
 - utilities/<sdk>/*_container.def — container recipes (already present for qiskit and qulacs)
