@@ -1,4 +1,4 @@
-maxcut — Max-Cut Problem (Quantum Optimization)
+# maxcut — Max-Cut Problem (Quantum Optimization)
 
 
 This directory contains implementations and resources to solve the MaxCut problem using QAOA across multiple quantum SDKs. The README documents the problem formulation, circuit construction, measurement & evaluation, recommended experiments, and the repository layout for the new file structure you provided.
