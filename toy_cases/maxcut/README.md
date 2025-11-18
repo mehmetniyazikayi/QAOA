@@ -53,6 +53,7 @@ maxcut/
   - maxcut_cudaq.ipynb
   - maxcut_pennylane.ipynb
   - maxcut_qutip.ipynb
+  - maxcut_qudora.ipynb
   - maxcut_comparison.ipynb
 
 Notes:
