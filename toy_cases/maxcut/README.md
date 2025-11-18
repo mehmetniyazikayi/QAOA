@@ -49,7 +49,7 @@ maxcut/
   - maxcut_qiskit.ipynb
   - maxcut_qulacs.ipynb
   - maxcut_qsim.ipynb
-  - maxcut_qubo.ipynb
+  - maxcut_qibo.ipynb
   - maxcut_cudaq.ipynb
   - maxcut_pennylane.ipynb
   - maxcut_qutip.ipynb
